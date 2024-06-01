@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ request.user.username }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #075E54;
+        }
+        .logout-form button {
+            background-color: #25D366;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .logout-form button:hover {
+            background-color: #128C7E;
+        }
+        .search-form {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .search-form input[type="text"] {
+            width: calc(100% - 100px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .search-form button {
+            background-color: #25D366;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-form button:hover {
+            background-color: #128C7E;
+        }
+        .user-list {
+            margin-top: 20px;
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-list a {
+            text-decoration: none;
+            color: #075E54;
+            font-size: 18px;
+        }
+        .user-status {
+            font-size: 14px;
+            color: #888;
+        }
+        .user-status.online {
+            color: #25D366;
+        }
+        .user-status.offline {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            {% if user.is_authenticated %}
+                <h1>{{ request.user.username }} Welcome to the Chat Room</h1>
+                <form class="logout-form" method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            {% else %}
+                <h1>Welcome to the Chat Room</h1>
+                <p>Please <a href="{% url 'login' %}">login</a> to access the chat room.</p>
+            {% endif %}
+        </header>
+    
+        {% if user.is_authenticated %}
+            <h2>Users Available for Chatting:</h2>
+            <form class="search-form" method="GET" action="{% url 'chat_room' %}">
+                <input type="text" name="search" placeholder="Search by username">
+                <button type="submit">Search</button>
+            </form>
+            <ul class="user-list">
+                {% for user in other_users %}
+                    <li>
+                        <a href="{% url 'start_chat' user.username %}">{{ user.username }}</a>
+                        {% if user.recent_message %}
+                            {% if not user.recent_message.read %}
+                                <span class="notification-count">{{ user.unread_count }}</span>
+                            {% endif %}
+                            <p>{{ user.recent_message.sender }}: {{ user.recent_message.content }}</p>
+                            <p>{{ user.recent_message.timestamp }}</p>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You must be logged in to view the users available for chatting.</p>
+        {% endif %}
+    </div>
+    
+</body>
+</html>

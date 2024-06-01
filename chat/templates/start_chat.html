@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with {{ other_user.username }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+        #chat-container {
+            display: flex;
+            max-width: 35%;
+            flex-direction: column;
+            height: 90vh;
+            margin: 0 auto; /* Add this line to horizontally center the container */
+        }
+        #chat-header {
+            text-align: center;
+            padding: 10px;
+            background-color: #075e54;
+            color: white;
+            flex-shrink: 0;
+        }
+        #chat-messages {
+            display: flex;
+            flex-direction: column; /* Stack messages vertically */
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: scroll;
+            background-color: #e5ddd5;
+        }
+        .message-card {
+            max-width: 70%; /* Adjust width as needed */
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+        .message-card.sent {
+            align-self: flex-end; /* Align sent messages to the left */
+            background-color: #dcf8c6;
+            color: #000; /* Change text color for sent messages */
+        }
+        .message-card.received {
+            align-self: flex-start; /* Align received messages to the right */
+            background-color: #fff;
+        }
+        .message-card p {
+            margin: 0;
+        }
+        .message-card .meta {
+            font-size: 0.8em;
+            color: #555;
+            text-align: right;
+        }
+        form {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end; /* Align form to the right */
+            gap: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+            width: 95%;
+            flex-shrink: 0;
+        }
+        textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            font-family: Arial, sans-serif;
+            height: 50px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <a href="{% url 'chat_room'%}">back</a>
+        <h2 id="chat-header">Chat with {{ other_user.username }}</h2>
+        <div id="chat-messages">
+            <!-- Your message display area -->
+            {% for message in chat_history %}
+                <div class="message-card {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <div class="message">
+                        <p>{{ message.content }}</p>
+                        <p class="meta">{{ message.timestamp }}</p>
+                    </div>
+                    {% if message.sender == request.user %}
+                    <div class="actions">
+                        <a href="#" onclick="editMessage('{{ message.content }}', {{ message.id }})">Edit</a>
+                        <a href="#" onclick="confirmDelete('{{ message.id }}')">Delete</a>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Hidden form for message deletion -->
+        <form id="delete-message-form" method="POST" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" id="delete-message-id" name="message_id">
+        </form>
+        <!-- Input form for sending or editing messages -->
+        <form id="message-form" method="POST" action="{% if editing_message_id %}{% url 'edit_message' editing_message_id %}{% else %}{% url 'send_message' other_user.username %}{% endif %}">
+            {% csrf_token %}
+            <textarea id="message-content" name="message_content" placeholder="Type your message here...">{% if editing_message_content %}{{ editing_message_content }}{% endif %}</textarea>
+            <button id="send-button" type="submit">
+                {% if editing_message_id %}Update{% else %}Send{% endif %}
+            </button>
+            {% if editing_message_id %}
+                <button id="cancel-button" type="button" onclick="cancelEdit()">Cancel</button>
+            {% endif %}
+        </form>
+    </div>
+    <script>
+        function editMessage(content, messageId) {
+            document.getElementById('message-content').value = content;
+            // Set editing state
+            document.getElementById('message-form').action = "{% url 'edit_message' 0 %}".replace('0', messageId);
+        }
+
+        function cancelEdit() {
+            // Clear editing state
+            document.getElementById('message-form').action = "{% url 'send_message' other_user.username %}";
+            document.getElementById('message-content').value = "";
+        }
+
+        window.onload = function() {
+            var chatMessages = document.getElementById('chat-messages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        function confirmDelete(messageId) {
+            if (confirm("Are you sure you want to delete this message?")) {
+                // Populate form with message ID and submit
+                document.getElementById('delete-message-id').value = messageId;
+                document.getElementById('delete-message-form').action = "{% url 'delete_message' 0 %}".replace('0', messageId);
+                document.getElementById('delete-message-form').submit();
+            } else {
+                // Do nothing or provide feedback to the user
+            }
+        }
+
+        function sendMessage(event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+        
+        var form = document.getElementById("message-form");
+        var formData = new FormData(form); // Create FormData object to store form data
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open(form.method, form.action, true); // Set up the request
+        
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    // Success - handle response if needed
+                    console.log("Message sent successfully");
+                    // You can update the UI or perform other actions here
+                } else {
+                    // Error - handle response if needed
+                    console.error("Error sending message:", xhr.statusText);
+                    // You can display an error message or handle it as necessary
+                }
+            }
+        };
+        
+        xhr.onerror = function() {
+            // Error - handle request error if needed
+            console.error("Error sending message:", xhr.statusText);
+            // You can display an error message or handle it as necessary
+        };
+        
+        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}'); // Set the CSRF token header
+        xhr.send(formData); // Send the form data asynchronously
+    }
+    </script>
+</body>
+</html>
