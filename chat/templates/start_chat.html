@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat with {{ other_user.username }}</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,6 +42,7 @@
             margin: 5px;
             border-radius: 10px;
             word-wrap: break-word;
+            position: relative; /* Added position relative for reply arrow */
         }
         .message-card.sent {
             align-self: flex-end; /* Align sent messages to the left */
@@ -57,6 +60,16 @@
             font-size: 0.8em;
             color: #555;
             text-align: right;
+        }
+        .reply-arrow {
+            position: absolute;
+            top: -10px;
+            left: -20px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid #fff;
         }
         form {
             display: flex;
@@ -89,26 +102,49 @@
         button:hover {
             background-color: #ffffff;
         }
+        .back-link {
+            color: #007bff;
+            font-size: 1.5em;
+            text-decoration: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        .back-link:hover {
+            color: #0056b3;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <a href="{% url 'chat_room'%}">back</a>
-        <h2 id="chat-header">Chat with {{ other_user.username }}</h2>
+        <a href="{% url 'chat_room'%}" class="back-link">&larr;</a>
+       
+        <h2 id="chat-header"> {% if other_user.profile.profile_picture %}
+            <img src="{{other_user.profile.profile_picture.url }}" alt="{{ user.username }}" style="width: 50px; height: 50px; border-radius: 50%;">
+        {% endif %}Chat with {{ other_user.username }}</h2>
         <div id="chat-messages">
             <!-- Your message display area -->
             {% for message in chat_history %}
                 <div class="message-card {% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    {% if message.sender != request.user %}
+                        <div class="reply-arrow"></div>
+                    {% endif %}
                     <div class="message">
                         <p>{{ message.content }}</p>
                         <p class="meta">{{ message.timestamp }}</p>
                     </div>
                     {% if message.sender == request.user %}
-                    <div class="actions">
-                        <a href="#" onclick="editMessage('{{ message.content }}', {{ message.id }})">Edit</a>
-                        <a href="#" onclick="confirmDelete('{{ message.id }}')">Delete</a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ message.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Actions
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ message.id }}">
+                            <a class="dropdown-item" href="#" onclick="editMessage('{{ message.content }}', {{ message.id }})">Edit</a>
+                            <a class="dropdown-item" href="#" onclick="confirmDelete('{{ message.id }}')">Delete</a>
+                        </div>
                     </div>
-                    {% endif %}
+                {% endif %}
                 </div>
             {% endfor %}
         </div>
@@ -120,15 +156,18 @@
         <!-- Input form for sending or editing messages -->
         <form id="message-form" method="POST" action="{% if editing_message_id %}{% url 'edit_message' editing_message_id %}{% else %}{% url 'send_message' other_user.username %}{% endif %}">
             {% csrf_token %}
-            <textarea id="message-content" name="message_content" placeholder="Type your message here...">{% if editing_message_content %}{{ editing_message_content }}{% endif %}</textarea>
-            <button id="send-button" type="submit">
+            <textarea id="message-content" name="message_content" placeholder="Type your message here..." class="form-control">{% if editing_message_content %}{{ editing_message_content }}{% endif %}</textarea>
+            <button id="send-button" type="submit" class="btn btn-primary">
                 {% if editing_message_id %}Update{% else %}Send{% endif %}
             </button>
             {% if editing_message_id %}
-                <button id="cancel-button" type="button" onclick="cancelEdit()">Cancel</button>
+                <button id="cancel-button" type="button" onclick="cancelEdit()" class="btn btn-secondary">Cancel</button>
             {% endif %}
         </form>
     </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
         function editMessage(content, messageId) {
             document.getElementById('message-content').value = content;
@@ -146,6 +185,7 @@
             var chatMessages = document.getElementById('chat-messages');
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
         function confirmDelete(messageId) {
             if (confirm("Are you sure you want to delete this message?")) {
                 // Populate form with message ID and submit
@@ -156,39 +196,7 @@
                 // Do nothing or provide feedback to the user
             }
         }
-
-        function sendMessage(event) {
-        event.preventDefault(); // Prevent the default form submission behavior
-        
-        var form = document.getElementById("message-form");
-        var formData = new FormData(form); // Create FormData object to store form data
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open(form.method, form.action, true); // Set up the request
-        
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 200) {
-                    // Success - handle response if needed
-                    console.log("Message sent successfully");
-                    // You can update the UI or perform other actions here
-                } else {
-                    // Error - handle response if needed
-                    console.error("Error sending message:", xhr.statusText);
-                    // You can display an error message or handle it as necessary
-                }
-            }
-        };
-        
-        xhr.onerror = function() {
-            // Error - handle request error if needed
-            console.error("Error sending message:", xhr.statusText);
-            // You can display an error message or handle it as necessary
-        };
-        
-        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}'); // Set the CSRF token header
-        xhr.send(formData); // Send the form data asynchronously
-    }
     </script>
 </body>
 </html>
+

@@ -1,6 +1,61 @@
-<h2>Profile {{ request.user.username }}</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save changes</button>
-  </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- Custom CSS for WhatsApp-like styling -->
+  <style>
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+      background-color: #128C7E;
+      color: #fff;
+      border-bottom: none;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+    }
+    .form-control {
+      border-radius: 20px;
+    }
+    .btn-primary {
+      background-color: #128C7E;
+      border-color: #128C7E;
+    }
+    .btn-primary:hover {
+      background-color: #0D6E5A;
+      border-color: #0D6E5A;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Profile {{ request.user.username }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+
+        <!-- Image preview section -->
+        {% if user.profile.profile_picture %}
+        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" style="width: 50px; height: 50px; border-radius: 50%;">
+    {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS and jQuery -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -141,17 +141,22 @@ def chat_room(request):
         user.recent_message = recent_message  # Add recent message to user object
 
         # Calculate unread message count for the user
-    for user in other_users:
         recent_unread_message = Message.objects.filter(
             sender=user, receiver=logged_in_user, read=False
         ).order_by('-timestamp').first()
 
         user.recent_unread_message = recent_unread_message  # Add recent unread message to user object
 
+        # Fetch the profile associated with the user
+        try:
+            profile = Profile.objects.get(user=user)
+            user.profile = profile  # Add profile to user object
+        except Profile.DoesNotExist:
+            pass  # If profile doesn't exist, handle accordingly
+
     return render(request, 'chat_room.html', {'other_users': other_users})
 
 
-from django.contrib.auth.models import User
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404
 from .models import Message
@@ -223,3 +228,97 @@ def get_chat_messages(request):
     messages = Message.objects.all()  # Fetch all messages from the database
     data = [{'content': message.content} for message in messages]  # Convert messages to JSON format
     return JsonResponse(data, safe=False)  # Return JSON response with messages
+
+
+import os
+from django.shortcuts import render
+from django.http import JsonResponse
+import google.generativeai as genai
+
+# Configure the Gemini API
+genai.configure(api_key="AIzaSyCBHJzNyEhusj_bDljUkTvKYQU95hgcDag")
+
+# Define the model configuration and safety settings
+generation_config = {
+  "temperature": 1,
+  "top_p": 0.95,
+  "top_k": 64,
+  "max_output_tokens": 8192,
+  "response_mime_type": "text/plain",
+}
+safety_settings = [
+  {
+    "category": "HARM_CATEGORY_HARASSMENT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    "category": "HARM_CATEGORY_HATE_SPEECH",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+  },
+  {
+    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+    "threshold": "BLOCK_MEDIUM_AND_ABOVE",
+  },
+]
+
+model = genai.GenerativeModel(
+  model_name="gemini-1.5-flash",
+  safety_settings=safety_settings,
+  generation_config=generation_config,
+)
+
+def ask_question(request):
+    if request.method == 'POST':
+        question = request.POST.get('question')
+        answers = request.POST.getlist('answers')
+
+        # Start the chat session
+        chat_session = model.start_chat(
+            history=[
+                {
+                    "role": "user",
+                    "parts": [question],
+                }
+            ]
+        )
+
+        response = chat_session.send_message(question)
+
+        # Example of processing the response and ranking the answers
+        # Assuming response contains a list of answers with similarity scores
+        ranked_answers = rank_answers(question, answers)
+
+        return JsonResponse({
+            'question': question,
+            'ranked_answers': ranked_answers,
+        })
+    else:
+        return render(request, 'ask_question.html')
+
+def rank_answers(question, answers):
+    import nltk
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    # Tokenize and create a vocabulary
+    all_texts = [question] + answers
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(all_texts)
+
+    # Calculate cosine similarity between question and answers
+    question_vector = tfidf_matrix[0]
+    answer_similarities = [cosine_similarity(question_vector, answer_vector)
+                           for answer_vector in tfidf_matrix[1:]]
+
+    # Rank answers based on similarity scores
+    ranked_answers = sorted(zip(answers, answer_similarities),
+                            key=lambda x: x[1], reverse=True)
+
+    return [{'answer': answer, 'similarity': similarity[0][0]} for answer, similarity in ranked_answers]
+
+
+
