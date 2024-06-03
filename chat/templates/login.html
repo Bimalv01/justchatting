@@ -1,28 +1,95 @@
-<!-- login.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        /* Custom WhatsApp-like style */
+        body {
+            background-color: #eaeaea;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            margin: 100px auto;
+            max-width: 400px;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #075e54;
+            color: #fff;
+            border-bottom: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-body {
+            background-color: #fff;
+            padding: 20px;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        .form-control {
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background-color: #075e54;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background-color: #128c7e;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Login</h2>
-    {% if error_message %}
-    <p><strong>{{ error_message }}</strong></p>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {% for message in messages %}
-        <p>{{ message }}</p>
-        {% endfor %}
-        <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-    <p>Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+    <div class="card">
+        <div class="card-header">
+            Login to WhatsApp
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% if error_message %}
+                <p class="error-message"><strong>{{ error_message }}</strong></p>
+                {% endif %}
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter your phone number" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <p class="text-center">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+            <p class="text-center">Use face Unlock <a href="{% url 'facial_login' %}">Here</a></p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and jQuery (Optional, for Bootstrap components) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

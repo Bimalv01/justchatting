@@ -2,6 +2,8 @@
 
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.login_view, name='login'),
@@ -12,5 +14,8 @@ urlpatterns = [
     path('send-message/<str:username>/', views.send_message, name='send_message'),
     path('edit_message/<int:message_id>/', views.edit_message, name='edit_message'),
     path('delete_message/<int:message_id>/', views.delete_message, name='delete_message'),
+    path('profile/', views.profile, name='profile'),
+    path('facial_login/', views.facial_login, name='facial_login'),
 ]
-
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

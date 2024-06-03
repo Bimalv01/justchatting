@@ -1,11 +1,21 @@
 # chat/views.py
 
+import os
+import uuid
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Message
+from .models import Message, Profile
 from django.contrib import messages
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import cmake
+import base64
+
 
 def register_view(request):
     if request.method == 'POST':
@@ -21,6 +31,74 @@ def register_view(request):
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
 
+
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+    instance.profile.save()
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import ProfileForm
+
+
+def profile(request):
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=request.user.profile)
+    return render(request, 'profile.html', {'form': form})
+
+import face_recognition
+from django.core.files.storage import default_storage
+
+def facial_login(request):
+    if request.method == 'POST':
+        image_data = request.POST.get('file')
+        if image_data:
+            format, imgstr = image_data.split(';base64,') 
+            ext = format.split('/')[-1] 
+            file_name = f"facial_login_{uuid.uuid4().hex[:8]}.{ext}"
+            file_path = os.path.join(settings.MEDIA_ROOT, 'temp', file_name)
+
+            # Decode the image and save it
+            with default_storage.open(file_path, 'wb+') as destination:
+                destination.write(base64.b64decode(imgstr))
+
+            try:
+                image = face_recognition.load_image_file(file_path)
+                face_encodings = face_recognition.face_encodings(image)
+                if face_encodings:
+                    user = None
+                    for u in User.objects.all():
+                        if u.profile.profile_picture:
+                            user_image = face_recognition.load_image_file(u.profile.profile_picture.path)
+                            user_face_encoding = face_recognition.face_encodings(user_image)[0]
+                            if face_recognition.compare_faces([user_face_encoding], face_encodings[0])[0]:
+                                user = u
+                                break
+
+                    if user:
+                        login(request, user)
+                        return redirect('chat_room')
+                    else:
+                        return HttpResponse("Facial recognition failed", status=401)
+                else:
+                    return HttpResponse("No face detected", status=400)
+            except FileNotFoundError as e:
+                return HttpResponse(f"File not found: {e}", status=404)
+            finally:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+        else:
+            return HttpResponse("No image data", status=400)
+    else:
+        return render(request, 'facial_login.html')
+    
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
@@ -77,7 +155,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404
 from .models import Message
-from django.http import Http404
+from django.http import Http404, HttpResponse
 @login_required
 def start_chat(request, username):
     try:

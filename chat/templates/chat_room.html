@@ -102,6 +102,7 @@
                     {% csrf_token %}
                     <button type="submit">Logout</button>
                 </form>
+                <p>Please <a href="{% url 'profile' %}">upload your image</a></p>
             {% else %}
                 <h1>Welcome to the Chat Room</h1>
                 <p>Please <a href="{% url 'login' %}">login</a> to access the chat room.</p>

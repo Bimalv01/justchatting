@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facial Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        video {
+            border: 2px solid #333;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        #snap {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #snap:hover {
+            background-color: #45a049;
+        }
+        #uploadForm button {
+            padding: 10px 20px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: none; /* Hide the login button by default */
+        }
+        #uploadForm button:hover {
+            background-color: #007bb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facial Login</h1>
+        <p>Please follow the steps below to login using facial recognition:</p>
+        <ol>
+            <li>Allow access to your webcam.</li>
+            <li>Position your face within the frame.</li>
+            <li>Click the "Capture" button to take a photo.</li>
+            <li>Click the "Login" button to submit the photo.</li>
+        </ol>
+        <div>
+            <video id="video" width="640" height="480" autoplay></video>
+            <br>
+            <button id="snap">Capture</button>
+            <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+        </div>
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+            <input type="hidden" name="file" id="imageData">
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const snapButton = document.getElementById('snap');
+        const uploadForm = document.getElementById('uploadForm');
+        const imageDataInput = document.getElementById('imageData');
+
+        // Access the webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Error accessing webcam: ", err);
+            });
+
+        // Capture the image
+        snapButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, 640, 480);
+            const imageData = canvas.toDataURL('image/jpeg');
+            imageDataInput.value = imageData;
+            snapButton.style.display = 'none'; // Hide the capture button after capturing the image
+            uploadForm.querySelector('button').style.display = 'block'; // Show the login button
+        });
+
+        // Handle form submission
+        uploadForm.addEventListener('submit', event => {
+            if (!imageDataInput.value) {
+                alert("Please capture an image first.");
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
