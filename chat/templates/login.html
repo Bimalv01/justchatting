@@ -3,93 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <title>Sign In — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom WhatsApp-like style */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: #eaeaea;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .card {
-            margin: 100px auto;
-            max-width: 400px;
-            border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+        .glass-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            animation: slideUp 0.5s ease;
         }
-        .card-header {
-            background-color: #075e54;
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+        .logo-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .logo h1 { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+        .logo span { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 400; display: block; }
+
+        h2 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 32px; }
+
+        .form-group { margin-bottom: 18px; }
+        label { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500; display: block; margin-bottom: 8px; }
+        input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
             color: #fff;
-            border-bottom: none;
-            text-align: center;
-            padding: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
         }
-        .card-body {
-            background-color: #fff;
-            padding: 20px;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
+        input::placeholder { color: rgba(255,255,255,0.3); }
+        input:focus {
+            border-color: #6c63ff;
+            background: rgba(108,99,255,0.1);
         }
-        .form-group {
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.15s;
+            letter-spacing: 0.2px;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 13px;
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.13); }
+
+        .divider {
+            display: flex; align-items: center; gap: 12px;
+            color: rgba(255,255,255,0.3); font-size: 12px; margin: 20px 0;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1;
+            height: 1px; background: rgba(255,255,255,0.1);
+        }
+
+        .footer-link {
+            text-align: center; margin-top: 24px;
+            color: rgba(255,255,255,0.5); font-size: 14px;
+        }
+        .footer-link a { color: #a78bfa; text-decoration: none; font-weight: 500; }
+        .footer-link a:hover { color: #c4b5fd; }
+
+        .error-box {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #fca5a5;
+            font-size: 13px;
             margin-bottom: 20px;
         }
-        label {
-            font-weight: bold;
+
+        .messages-list { list-style: none; margin-bottom: 16px; }
+        .messages-list li {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fca5a5;
+            font-size: 13px;
+            margin-bottom: 8px;
         }
-        .form-control {
-            border-radius: 5px;
-        }
-        .btn-primary {
-            background-color: #075e54;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-weight: bold;
-        }
-        .btn-primary:hover {
-            background-color: #128c7e;
-        }
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-        }
+        .messages-list li.success { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #86efac; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="card-header">
-            Login to WhatsApp
+    <div class="glass-card">
+        <div class="logo">
+            <div class="logo-icon">💬</div>
+            <div>
+                <h1>JustChatting</h1>
+                <span>Real-time messaging</span>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {% if error_message %}
-                <p class="error-message"><strong>{{ error_message }}</strong></p>
-                {% endif %}
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" class="form-control" id="username" name="username" placeholder="Enter your phone number" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
-            </form>
-            <p class="text-center">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
-            <p class="text-center">Use face Unlock <a href="{% url 'facial_login' %}">Here</a></p>
+
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to continue chatting</p>
+
+        {% if messages %}
+        <ul class="messages-list">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                <input type="text" id="id_username" name="username" placeholder="Enter your username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password</label>
+                <input type="password" id="id_password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn-primary">Sign In</button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <a href="{% url 'facial_login' %}" class="btn-secondary">
+            <span>👁️</span> Sign in with Face Unlock
+        </a>
+
+        <div class="footer-link">
+            Don't have an account? <a href="{% url 'register' %}">Create one</a>
         </div>
     </div>
-
-    <!-- Bootstrap JS and jQuery (Optional, for Bootstrap components) -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

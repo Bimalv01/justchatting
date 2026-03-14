@@ -17,6 +17,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('facial_login/', views.facial_login, name='facial_login'),
     path('ask/', views.ask_question, name='ask_question'),
+    path('api/conversation/<str:username>/', views.get_conversation, name='get_conversation'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

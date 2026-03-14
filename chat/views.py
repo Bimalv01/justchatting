@@ -13,7 +13,6 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import cmake
 import base64
 
 
@@ -64,6 +63,9 @@ def facial_login(request):
             ext = format.split('/')[-1] 
             file_name = f"facial_login_{uuid.uuid4().hex[:8]}.{ext}"
             file_path = os.path.join(settings.MEDIA_ROOT, 'temp', file_name)
+
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
             # Decode the image and save it
             with default_storage.open(file_path, 'wb+') as destination:
@@ -228,6 +230,37 @@ def get_chat_messages(request):
     messages = Message.objects.all()  # Fetch all messages from the database
     data = [{'content': message.content} for message in messages]  # Convert messages to JSON format
     return JsonResponse(data, safe=False)  # Return JSON response with messages
+
+@login_required
+def get_conversation(request, username):
+    """Return chat history between current user and `username` as JSON."""
+    other_user = get_object_or_404(User, username=username)
+    history = Message.objects.filter(
+        Q(sender=request.user, receiver=other_user) |
+        Q(sender=other_user, receiver=request.user)
+    ).order_by('timestamp').select_related('sender', 'sender__profile')
+
+    # Mark received messages as read
+    history.filter(sender=other_user, read=False).update(read=True)
+
+    data = []
+    for m in history:
+        pic = ''
+        try:
+            if m.sender.profile.profile_picture:
+                pic = m.sender.profile.profile_picture.url
+        except Exception:
+            pass
+        data.append({
+            'id': m.id,
+            'content': m.content,
+            'sender': m.sender.username,
+            'timestamp': m.timestamp.strftime('%H:%M'),
+            'profile_pic': pic,
+        })
+    return JsonResponse({'messages': data, 'other_username': username})
+
+
 
 
 import os

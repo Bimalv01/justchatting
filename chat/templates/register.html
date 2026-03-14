@@ -3,77 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registration</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <title>Create Account — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom WhatsApp-like style */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: #eaeaea;
-            font-family: Arial, sans-serif;
-        }
-        .card {
-            margin: 100px auto;
-            max-width: 400px;
-            border: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-            background-color: #075e54;
-            color: #fff;
-            border-bottom: none;
-            text-align: center;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex; align-items: center; justify-content: center;
             padding: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
         }
-        .card-body {
-            background-color: #fff;
-            padding: 20px;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
+
+        .glass-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            animation: slideUp 0.5s ease;
         }
-        .form-group {
-            margin-bottom: 20px;
+        @keyframes slideUp {
+            from { opacity:0; transform:translateY(30px); }
+            to   { opacity:1; transform:translateY(0); }
         }
-        label {
-            font-weight: bold;
+
+        .logo { display:flex; align-items:center; gap:12px; margin-bottom:36px; }
+        .logo-icon {
+            width:48px; height:48px;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            border-radius:14px; display:flex; align-items:center; justify-content:center;
+            font-size:22px;
         }
-        .form-control {
-            border-radius: 5px;
+        .logo h1 { color:#fff; font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+        .logo span { color:rgba(255,255,255,0.5); font-size:13px; display:block; }
+
+        h2 { color:#fff; font-size:26px; font-weight:700; margin-bottom:8px; }
+        .subtitle { color:rgba(255,255,255,0.5); font-size:14px; margin-bottom:28px; }
+
+        /* Django form fields */
+        p { margin-bottom: 16px; }
+        p label { color:rgba(255,255,255,0.7); font-size:13px; font-weight:500; display:block; margin-bottom:7px; }
+        p input, p select {
+            width:100%; padding:13px 16px;
+            background:rgba(255,255,255,0.07);
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:12px; color:#fff;
+            font-size:14px; font-family:'Inter',sans-serif;
+            outline:none; transition: border-color 0.2s, background 0.2s;
         }
+        p input::placeholder { color:rgba(255,255,255,0.3); }
+        p input:focus { border-color:#6c63ff; background:rgba(108,99,255,0.1); }
+        p .helptext { color:rgba(255,255,255,0.35); font-size:11px; margin-top:5px; display:block; }
+        p ul { list-style:none; }
+        p ul li { color:#fca5a5; font-size:12px; margin-top:5px; }
+
         .btn-primary {
-            background-color: #075e54;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-weight: bold;
+            width:100%; padding:14px;
+            background:linear-gradient(135deg,#6c63ff,#a855f7);
+            color:#fff; border:none; border-radius:12px;
+            font-size:15px; font-weight:600; font-family:'Inter',sans-serif;
+            cursor:pointer; margin-top:8px;
+            transition:opacity 0.2s, transform 0.15s; letter-spacing:0.2px;
         }
-        .btn-primary:hover {
-            background-color: #128c7e;
-        }
+        .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+
+        .footer-link { text-align:center; margin-top:24px; color:rgba(255,255,255,0.5); font-size:14px; }
+        .footer-link a { color:#a78bfa; text-decoration:none; font-weight:500; }
+        .footer-link a:hover { color:#c4b5fd; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="card-header">
-            User Registration
+    <div class="glass-card">
+        <div class="logo">
+            <div class="logo-icon">💬</div>
+            <div>
+                <h1>JustChatting</h1>
+                <span>Real-time messaging</span>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary btn-block">Register</button>
-            </form>
+
+        <h2>Create account</h2>
+        <p class="subtitle">Join the conversation today</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-primary">Create Account</button>
+        </form>
+
+        <div class="footer-link">
+            Already have an account? <a href="{% url 'login' %}">Sign in</a>
         </div>
     </div>
-
-    <!-- Bootstrap JS and jQuery (Optional, for Bootstrap components) -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

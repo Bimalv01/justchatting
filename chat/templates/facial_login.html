@@ -3,80 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facial Login</title>
+    <title>Facial Login - JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            margin: 0;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #fff;
+            position: relative;
+            overflow: hidden;
         }
-        .container {
+
+        /* Ambient background shapes */
+        .ambient-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            opacity: 0.5;
+        }
+        .shape-1 { width: 400px; height: 400px; background: #8b5cf6; top: -100px; left: -100px; }
+        .shape-2 { width: 500px; height: 500px; background: #3b82f6; bottom: -200px; right: -100px; }
+
+        .auth-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            z-index: 1;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            color: #333;
+
+        .auth-header { margin-bottom: 30px; }
+        .auth-header h1 {
+            font-size: 28px; font-weight: 600; margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .auth-header p { color: #94a3b8; font-size: 14px; }
+
+        .video-container {
+            position: relative;
+            margin-bottom: 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         video {
-            border: 2px solid #333;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect */
         }
-        #snap {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        #placeholder { position: absolute; color: #94a3b8; font-size: 14px; }
+        
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; margin-bottom: 16px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        #snap:hover {
-            background-color: #45a049;
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
-        #uploadForm button {
-            padding: 10px 20px;
-            background-color: #008CBA;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            display: none; /* Hide the login button by default */
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05); color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        #uploadForm button:hover {
-            background-color: #007bb5;
-        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .auth-footer { margin-top: 24px; font-size: 14px; color: #94a3b8; }
+        .auth-footer a { color: #8b5cf6; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .auth-footer a:hover { color: #a78bfa; }
+        
+        .status-msg { color: #4ade80; font-size: 14px; margin-bottom: 16px; display: none; }
+        
+        /* Error messages */
+        .messages { margin-bottom: 20px; list-style: none; }
+        .messages li { padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Facial Login</h1>
-        <p>Please follow the steps below to login using facial recognition:</p>
-        <ol>
-            <li>Allow access to your webcam.</li>
-            <li>Position your face within the frame.</li>
-            <li>Click the "Capture" button to take a photo.</li>
-            <li>Click the "Login" button to submit the photo.</li>
-        </ol>
+    <div class="ambient-shape shape-1"></div>
+    <div class="ambient-shape shape-2"></div>
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Facial Login</h1>
+            <p>Look directly at the camera to sign in instantly.</p>
+        </div>
+
+        <!-- Optional error message from Django messages -->
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="video-container">
+            <span id="placeholder">Accessing webcam...</span>
+            <video id="video" autoplay playsinline></video>
+        </div>
+        
+        <p id="status-msg" class="status-msg">📷 Face captured!</p>
+
         <div>
-            <video id="video" width="640" height="480" autoplay></video>
-            <br>
-            <button id="snap">Capture</button>
+            <button id="snap" class="btn btn-secondary">
+                <span>📸</span> Capture Face
+            </button>
             <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
         </div>
+
         <form id="uploadForm" method="post" enctype="multipart/form-data">
             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             <input type="hidden" name="file" id="imageData">
-            <button type="submit">Login</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="display:none;">
+                <span>✨</span> Verify & Login
+            </button>
         </form>
+
+        <div class="auth-footer">
+            Prefer a password? <a href="{% url 'login' %}">Sign in with password</a>
+        </div>
     </div>
 
     <script>
@@ -86,24 +156,37 @@
         const snapButton = document.getElementById('snap');
         const uploadForm = document.getElementById('uploadForm');
         const imageDataInput = document.getElementById('imageData');
+        const placeholder = document.getElementById('placeholder');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMsg = document.getElementById('status-msg');
 
         // Access the webcam
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
+                placeholder.style.display = 'none';
                 video.srcObject = stream;
                 video.play();
             })
             .catch(err => {
-                console.error("Error accessing webcam: ", err);
+                placeholder.textContent = "Error: Webcam access denied.";
+                console.error("Error accessing webcam:", err);
             });
 
         // Capture the image
         snapButton.addEventListener('click', () => {
-            context.drawImage(video, 0, 0, 640, 480);
+            // Need to mirror context because the video is mirrored via CSS
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Reset transform for next capture
+            context.setTransform(1, 0, 0, 1, 0, 0);
+            
             const imageData = canvas.toDataURL('image/jpeg');
             imageDataInput.value = imageData;
-            snapButton.style.display = 'none'; // Hide the capture button after capturing the image
-            uploadForm.querySelector('button').style.display = 'block'; // Show the login button
+            
+            snapButton.style.display = 'none'; // Hide capture button
+            statusMsg.style.display = 'block'; // Show success message
+            submitBtn.style.display = 'flex'; // Show submit button
         });
 
         // Handle form submission
@@ -111,6 +194,10 @@
             if (!imageDataInput.value) {
                 alert("Please capture an image first.");
                 event.preventDefault();
+            } else {
+                submitBtn.innerHTML = '<span class="spinner">↻</span> Verifying...';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.style.pointerEvents = 'none';
             }
         });
     </script>

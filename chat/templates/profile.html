@@ -1,61 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Profile</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- Custom CSS for WhatsApp-like styling -->
-  <style>
-    .card {
-      border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .card-header {
-      background-color: #128C7E;
-      color: #fff;
-      border-bottom: none;
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-    }
-    .form-control {
-      border-radius: 20px;
-    }
-    .btn-primary {
-      background-color: #128C7E;
-      border-color: #128C7E;
-    }
-    .btn-primary:hover {
-      background-color: #0D6E5A;
-      border-color: #0D6E5A;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: rgba(255,255,255,0.5); text-decoration: none;
+            font-size: 14px; margin-bottom: 28px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #a78bfa; }
+
+        .avatar-section {
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 36px;
+        }
+        .avatar-ring {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            padding: 3px; margin-bottom: 14px;
+        }
+        .avatar-inner {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: #1a1640; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; color: #fff; font-weight: 600;
+        }
+        .avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-section h2 { color: #fff; font-size: 20px; font-weight: 700; }
+        .avatar-section span { color: rgba(255,255,255,0.4); font-size: 13px; }
+
+        h3 { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600;
+             letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 20px; }
+
+        p { margin-bottom: 18px; }
+        p label { color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; display: block; margin-bottom: 7px; }
+        p input[type="file"], p input[type="text"], p input[type="email"], p select {
+            width: 100%; padding: 12px 16px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px; color: #fff;
+            font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+        }
+        p input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
+        p input[type="file"] { cursor: pointer; }
+        p input[type="file"]::file-selector-button {
+            background: rgba(108,99,255,0.3); border: none;
+            color: #a78bfa; padding: 6px 12px; border-radius: 8px;
+            cursor: pointer; margin-right: 10px; font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #6c63ff, #a855f7);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    </style>
 </head>
 <body>
-  <div class="container mt-4">
     <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Profile {{ request.user.username }}</h5>
-      </div>
-      <div class="card-body">
+        <a href="{% url 'chat_room' %}" class="back-link">← Back to chats</a>
+
+        <div class="avatar-section">
+            <div class="avatar-ring">
+                <div class="avatar-inner">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
+                    {% else %}
+                        {{ request.user.username|first|upper }}
+                    {% endif %}
+                </div>
+            </div>
+            <h2>{{ request.user.username }}</h2>
+            <span>Edit your profile</span>
+        </div>
+
+        <h3>Profile Settings</h3>
+
         <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          {{ form.as_p }}
-          <button type="submit" class="btn btn-primary">Save Changes</button>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-primary">Save Changes</button>
         </form>
-
-        <!-- Image preview section -->
-        {% if user.profile.profile_picture %}
-        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" style="width: 50px; height: 50px; border-radius: 50%;">
-    {% endif %}
-      </div>
     </div>
-  </div>
-
-  <!-- Bootstrap JS and jQuery -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
