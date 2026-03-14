@@ -11,8 +11,10 @@
         body {
             font-family: 'Inter', sans-serif;
             height: 100vh;
+            height: 100dvh;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             display: flex; overflow: hidden;
+            overscroll-behavior-y: none; /* Prevents iOS bounce scrolling safely */
         }
 
         /* ═══════════════════════════════════════════════════════════
@@ -245,6 +247,44 @@
             animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Mobile Responsiveness ── */
+        #back-btn {
+            display: none;
+            width: 36px; height: 36px; border-radius: 9px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.9); cursor: pointer;
+            align-items: center; justify-content: center;
+            font-size: 18px; margin-right: 8px; transition: background 0.2s;
+        }
+        #back-btn:active { background: rgba(255,255,255,0.1); }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; min-width: 100%; border-right: none; }
+            .chat-panel { display: none; }
+            
+            body.show-chat .sidebar { display: none; }
+            body.show-chat .chat-panel { display: flex; width: 100%; }
+            
+            #back-btn { display: flex; }
+            .chat-header { padding: 12px 14px; gap: 10px; }
+            #chat-messages { padding: 16px 14px 12px; }
+            .bubble { max-width: 85%; }
+            .empty-state { display: none !important; }
+            
+            /* Enhanced mobile input bar */
+            .input-bar { 
+                padding: 10px 12px; 
+                padding-bottom: calc(10px + env(safe-area-inset-bottom)); /* Accounts for iOS home bar */
+            }
+            #message-content {
+                font-size: 16px; /* 16px prevents iOS Safari auto-zoom on focus */
+                padding: 10px 14px;
+            }
+            #send-btn {
+                width: 40px; height: 40px; font-size: 15px; /* Slightly smaller button for smaller phones */
+            }
+        }
     </style>
 </head>
 <body>
@@ -349,6 +389,7 @@
 
     <!-- Chat header (hidden until a user is selected) -->
     <div class="chat-header" id="chat-header">
+        <button id="back-btn" onclick="closeChat()">←</button>
         <div class="ch-avatar" id="ch-avatar" style="position:relative;">
             ?
             <div id="ch-status-dot" style="position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; border:2px solid #24243e; background-color:#ef4444;"></div>
@@ -391,6 +432,8 @@ function openChat(username, picUrl, isOnline) {
     currentOther = username;
     editingId = null; // Reset editing state
     resetInputBox();
+    
+    document.body.classList.add('show-chat');
 
     document.getElementById('empty-state').style.display = 'none';
     const header = document.getElementById('chat-header');
@@ -422,6 +465,18 @@ function openChat(username, picUrl, isOnline) {
         .catch(() => {
             msgs.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px;">Failed to load messages</div>';
         });
+}
+
+function closeChat() {
+    document.body.classList.remove('show-chat');
+    currentOther = null;
+    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById('chat-header').classList.remove('visible');
+    document.getElementById('input-bar').classList.remove('visible');
+    document.getElementById('empty-state').style.display = 'flex';
+    
+    if (socket) { socket.onclose = null; socket.close(); socket = null; }
 }
 
 function renderHistory(messages) {
@@ -618,6 +673,22 @@ function updateSidebarPreview(username, text) {
     if (preview) preview.textContent = text.length > 32 ? text.slice(0, 32) + '…' : text;
     const list = document.getElementById('user-list');
     list.prepend(item);
+}
+
+/* ── Mobile Keyboard Adjustments (VisualViewport) ── */
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        // Force the body absolutely straight against the visual viewport
+        if (window.visualViewport.height > 100) {
+            document.body.style.height = window.visualViewport.height + 'px';
+        }
+        
+        // Scroll messages to the bottom so the last message isn't hidden by the keyboard pop-up
+        const msgs = document.getElementById('chat-messages');
+        if (msgs) {
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+    });
 }
 </script>
 

@@ -15,8 +15,12 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import base64
 
+from django.views.decorators.cache import never_cache
 
+@never_cache
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('chat_room')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -55,7 +59,10 @@ def profile(request):
 import face_recognition
 from django.core.files.storage import default_storage
 
+@never_cache
 def facial_login(request):
+    if request.user.is_authenticated:
+        return redirect('chat_room')
     if request.method == 'POST':
         image_data = request.POST.get('file')
         if image_data:
@@ -100,8 +107,11 @@ def facial_login(request):
             return HttpResponse("No image data", status=400)
     else:
         return render(request, 'facial_login.html')
-    
+
+@never_cache
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('chat_room')
     if request.method == 'POST':
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
@@ -156,7 +166,14 @@ def chat_room(request):
         except Profile.DoesNotExist:
             pass  # If profile doesn't exist, handle accordingly
 
-    return render(request, 'chat_room.html', {'other_users': other_users})
+    # Sort users so the most recent conversations appear at the top
+    user_list = list(other_users)
+    user_list.sort(
+        key=lambda u: u.recent_message.timestamp.timestamp() if getattr(u, 'recent_message', None) else 0,
+        reverse=True
+    )
+
+    return render(request, 'chat_room.html', {'other_users': user_list})
 
 
 from django.contrib.auth.models import User
