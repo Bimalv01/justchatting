@@ -10,6 +10,8 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False) 
+    is_delivered = models.BooleanField(default=False) 
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['timestamp']
@@ -22,6 +24,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     is_online = models.BooleanField(default=False)
+    session_key = models.CharField(max_length=40, null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s profile"

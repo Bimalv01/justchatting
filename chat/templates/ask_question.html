@@ -1,86 +1,252 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Ask Question</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            padding: 20px;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: #020617;
+            color: #f8fafc;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            position: relative;
         }
-        #question-form {
-            max-width: 600px;
-            margin: 0 auto;
+
+        /* ── Dynamic Mesh Background ── */
+        .ambient-bg {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(34, 211, 238, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.3) 0%, transparent 35%);
+            filter: blur(100px);
+            animation: meshFlow 25s ease-in-out infinite alternate;
+            z-index: 0; pointer-events: none;
         }
-        .form-group textarea {
+        @keyframes meshFlow {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+            100% { transform: rotate(-5deg) scale(1.05); }
+        }
+
+        /* ── Glassmorphism Container ── */
+        .app-container {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%; max-width: 600px;
+            max-height: 95vh; overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; z-index: 10;
+        }
+        
+        /* Custom scrollbar */
+        .app-container::-webkit-scrollbar { width: 6px; }
+        .app-container::-webkit-scrollbar-track { background: transparent; }
+        .app-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .app-container::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .icon-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .icon {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.5);
+            animation: pulseGlow 4s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); }
+            100% { box-shadow: 0 15px 35px 2px rgba(59, 130, 246, 0.6); }
+        }
+
+        h2 { 
+            text-align: center; font-size: 26px; font-weight: 600; margin-bottom: 8px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 32px; line-height: 1.5; font-weight: 300; }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { color: #cbd5e1; font-size: 14px; font-weight: 500; display: block; margin-bottom: 8px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: #f8fafc;
+            font-size: 15px; font-family: 'Outfit', sans-serif;
+            transition: all 0.3s ease; outline: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
             resize: none;
         }
-        #best-answer {
-            margin-top: 20px;
-        }
-    </style>
-    
-    <script>
-        function addAnswerField() {
-            var answerList = document.getElementById("answer-list");
-            var newField = document.createElement("textarea");
-            newField.name = "answers";
-            newField.className = "form-control";
-            newField.rows = 2;
-            newField.required = true;
-            answerList.appendChild(newField);
-            answerList.appendChild(document.createElement("br"));
+        .form-group input::placeholder, .form-group textarea::placeholder { color: #475569; }
+        .form-group input:focus, .form-group textarea:focus { 
+            border-color: #3b82f6; 
+            background: rgba(255, 255, 255, 0.06); 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0,0,0,0.1); 
         }
 
-        function displayBestAnswer(bestAnswer) {
-            var bestAnswerDiv = document.getElementById("best-answer");
-            bestAnswerDiv.innerHTML = "<h2>Best Answer:</h2><p class='alert alert-success'>" + bestAnswer + "</p>";
+        /* ── Buttons ── */
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            color: #ffffff;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.3s ease;
+            margin-top: 10px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);
         }
-    </script>
+        .btn-primary::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn-primary:hover::after { left: 150%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(16, 185, 129, 0.6); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            display: block; width: 100%; padding: 12px;
+            background: rgba(255, 255, 255, 0.03); color: #e2e8f0;
+            border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 12px;
+            font-size: 14px; font-weight: 500; text-align: center; cursor: pointer;
+            transition: all 0.3s ease; margin-bottom: 20px; font-family: 'Outfit', sans-serif;
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.4); }
+
+        /* ── Result ── */
+        #best-answer {
+            margin-top: 24px; display: none;
+            background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px; padding: 20px; color: #a7f3d0;
+            font-size: 15px; line-height: 1.6;
+        }
+
+        .back-nav {
+            position: absolute; top: 24px; left: 24px;
+            color: #94a3b8; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .back-nav:hover { color: #f8fafc; }
+
+        @media (max-width: 480px) {
+            body { align-items: flex-start; overflow-y: auto; }
+            .app-container {
+                padding: 32px 20px;
+                padding-top: calc(32px + env(safe-area-inset-top));
+                padding-bottom: calc(32px + env(safe-area-inset-bottom));
+                border-radius: 0; border: none; box-shadow: none;
+                max-width: 100%; min-height: 100vh; min-height: 100dvh;
+                display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.8);
+            }
+            .back-nav { position: relative; top: 0; left: 0; margin-bottom: 24px; }
+            .form-group input, .form-group textarea { font-size: 16px; }
+            h2 { font-size: 22px; }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text-center">Ask a Question</h1>
-        <form method="post" action="{% url 'ask_question' %}" id="question-form" class="form">
+
+    <div class="ambient-bg"></div>
+
+    <div class="app-container">
+        
+        <a href="{% url 'chat_room' %}" class="back-nav">
+            <svg viewBox="0 0 24 24" height="16" width="16" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg>
+            Back to Chat
+        </a>
+
+        <div class="icon-container">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" height="32" width="32" fill="#ffffff"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm1-5.18V12h-2v-1.5a1 1 0 0 1 1-1h.25a1.25 1.25 0 0 0 0-2.5 1.75 1.75 0 1 0-3.5 0H5.5a3.75 3.75 0 1 1 7.5 0 3.25 3.25 0 0 1-1.31 2.58z"></path></svg>
+            </div>
+        </div>
+        
+        <h2>AI Assistant</h2>
+        <p class="subtitle">Ask a question and provide possible answers to rank them by relevance.</p>
+
+        <form method="post" action="{% url 'ask_question' %}" id="question-form">
             {% csrf_token %}
             <div class="form-group">
-                <label for="question">Question:</label>
-                <input type="text" id="question" name="question" class="form-control" required>
+                <label for="question">The Question</label>
+                <input type="text" id="question" name="question" placeholder="E.g., What is the capital of France?" required>
             </div>
             
             <div class="form-group">
-                <label for="answers">Answers:</label>
+                <label for="answers">Plausible Answers</label>
                 <div id="answer-list">
-                    <textarea name="answers" class="form-control" rows="2" required></textarea><br>
+                    <textarea name="answers" rows="2" placeholder="E.g., Paris" required></textarea>
                 </div>
-                <button type="button" class="btn btn-secondary" onclick="addAnswerField()">Add Another Answer</button>
             </div>
             
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn-secondary" onclick="addAnswerField()">+ Add Another Answer Option</button>
+            <button type="submit" class="btn-primary" id="submit-btn" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <svg viewBox="0 0 24 24" height="20" width="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                <span>Process with AI</span>
+            </button>
         </form>
 
         <div id="best-answer"></div>
+
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
     <script>
+        function addAnswerField() {
+            const answerList = document.getElementById("answer-list");
+            const newField = document.createElement("textarea");
+            newField.name = "answers";
+            newField.rows = 2;
+            newField.placeholder = "Another answer...";
+            newField.required = true;
+            newField.style.marginTop = "12px";
+            answerList.appendChild(newField);
+        }
+
         document.getElementById("question-form").onsubmit = async function(event) {
             event.preventDefault();
 
-            var formData = new FormData(event.target);
-            var response = await fetch(event.target.action, {
-                method: "POST",
-                body: formData,
-            });
-            var result = await response.json();
+            const btn = document.getElementById('submit-btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = 'Thinking...';
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
 
-            if (result.ranked_answers && result.ranked_answers.length > 0) {
-                displayBestAnswer(result.ranked_answers[0].answer);
+            try {
+                const formData = new FormData(event.target);
+                const response = await fetch(event.target.action, {
+                    method: "POST",
+                    body: formData,
+                });
+                
+                const result = await response.json();
+                
+                if (result.ranked_answers && result.ranked_answers.length > 0) {
+                    const bestAnswerDiv = document.getElementById("best-answer");
+                    bestAnswerDiv.style.display = 'block';
+                    bestAnswerDiv.innerHTML = `<span style="display:block; font-size:12px; font-weight:600; color:#10b981; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Top Ranked Answer</span>${result.ranked_answers[0][0]}`;
+                }
+            } catch (error) {
+                console.error("Error processing AI request:", error);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
             }
         };
     </script>

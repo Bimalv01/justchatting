@@ -2,20 +2,64 @@
 
 import os
 import uuid
+import base64
+import face_recognition
+import warnings
+
+# Ignore FutureWarnings from google.generativeai
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Message, Profile
-from django.contrib import messages
-from django.dispatch import receiver
 from django.contrib.auth.models import User
+from django.contrib import messages
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import base64
-
 from django.views.decorators.cache import never_cache
+from django.core.files.storage import default_storage
+from django.http import HttpResponse, Http404, JsonResponse
+from django.db.models import Max, Q
+
+import google.generativeai as genai
+
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+from .models import Message, Profile
+from .forms import ProfileForm
+
+
+def _is_user_already_logged_in(user):
+    """
+    Checks if this user already has an active session.
+    Returns True if an active session exists, False otherwise.
+    """
+    try:
+        stored_key = user.profile.session_key
+        if not stored_key:
+            return False
+            
+        # Check if the session actually exists and hasn't expired
+        session = Session.objects.filter(session_key=stored_key).first()
+        if session and session.expire_date > timezone.now():
+            return True
+            
+        # Session expired or was deleted from DB
+        return False
+    except Exception:
+        return False
+
+def _store_session_key(request, user):
+    """After login, store the new session key so SingleSessionMiddleware can
+    detect and invalidate stale sessions on other devices."""
+    try:
+        profile = user.profile
+        profile.session_key = request.session.session_key
+        profile.save(update_fields=['session_key'])
+    except Exception:
+        pass
 
 @never_cache
 def register_view(request):
@@ -24,8 +68,12 @@ def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
+            # (We cannot block registration based on _is_user_already_logged_in
+            # because the user is just being created now, so they obviously
+            # aren't logged in yet).
             user = form.save()
             login(request, user)
+            _store_session_key(request, user)
             messages.success(request, "Registration successful. You are now logged in.")
             return redirect('chat_room')
         else:
@@ -41,11 +89,8 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
     instance.profile.save()
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .forms import ProfileForm
-
-
+@login_required
+@never_cache
 def profile(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
@@ -55,9 +100,6 @@ def profile(request):
     else:
         form = ProfileForm(instance=request.user.profile)
     return render(request, 'profile.html', {'form': form})
-
-import face_recognition
-from django.core.files.storage import default_storage
 
 @never_cache
 def facial_login(request):
@@ -92,7 +134,11 @@ def facial_login(request):
                                 break
 
                     if user:
+                        if _is_user_already_logged_in(user):
+                            return HttpResponse("User is already logged in on another device.", status=403)
+                            
                         login(request, user)
+                        _store_session_key(request, user)
                         return redirect('chat_room')
                     else:
                         return HttpResponse("Facial recognition failed", status=401)
@@ -116,7 +162,13 @@ def login_view(request):
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            
+            if _is_user_already_logged_in(user):
+                messages.error(request, "This account is currently logged in on another device. Please log out there first.")
+                return render(request, 'login.html', {'form': form})
+                
             login(request, user)
+            _store_session_key(request, user)
             messages.success(request, "Login successful.")
             return redirect('chat_room')
         else:
@@ -126,15 +178,19 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 def logout_view(request):
+    # Clear stored session key so the next login starts fresh
+    if request.user.is_authenticated:
+        try:
+            request.user.profile.session_key = None
+            request.user.profile.save(update_fields=['session_key'])
+        except Exception:
+            pass
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect('login')
 
-from django.contrib.auth.models import User
-from django.db.models import Max
-from django.db.models import Q
-
 @login_required
+@never_cache
 def chat_room(request):
     logged_in_user = request.user
     other_users = User.objects.exclude(pk=logged_in_user.pk).exclude(is_superuser=True)
@@ -153,11 +209,9 @@ def chat_room(request):
         user.recent_message = recent_message  # Add recent message to user object
 
         # Calculate unread message count for the user
-        recent_unread_message = Message.objects.filter(
+        user.unread_count = Message.objects.filter(
             sender=user, receiver=logged_in_user, read=False
-        ).order_by('-timestamp').first()
-
-        user.recent_unread_message = recent_unread_message  # Add recent unread message to user object
+        ).count()
 
         # Fetch the profile associated with the user
         try:
@@ -175,11 +229,6 @@ def chat_room(request):
 
     return render(request, 'chat_room.html', {'other_users': user_list})
 
-
-from django.contrib.auth.models import User
-from django.shortcuts import render, get_object_or_404
-from .models import Message
-from django.http import Http404, HttpResponse
 @login_required
 def start_chat(request, username):
     try:
@@ -206,6 +255,7 @@ def start_chat(request, username):
         })
     except User.DoesNotExist:
         raise Http404("User does not exist")
+
 @login_required   
 def send_message(request, username):
     if request.method == "POST":
@@ -240,9 +290,6 @@ def delete_message(request, message_id):
     message.delete()
     return redirect('start_chat', username=receiver_username)
 
-from django.http import JsonResponse
-from .models import Message
-
 def get_chat_messages(request):
     messages = Message.objects.all()  # Fetch all messages from the database
     data = [{'content': message.content} for message in messages]  # Convert messages to JSON format
@@ -251,6 +298,9 @@ def get_chat_messages(request):
 @login_required
 def get_conversation(request, username):
     """Return chat history between current user and `username` as JSON."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'session_expired'}, status=401)
+
     other_user = get_object_or_404(User, username=username)
     history = Message.objects.filter(
         Q(sender=request.user, receiver=other_user) |
@@ -274,16 +324,12 @@ def get_conversation(request, username):
             'sender': m.sender.username,
             'timestamp': m.timestamp.strftime('%H:%M'),
             'profile_pic': pic,
+            'is_read': m.read,
+            'is_delivered': m.is_delivered,
+            'is_deleted': m.is_deleted,
         })
     return JsonResponse({'messages': data, 'other_username': username})
 
-
-
-
-import os
-from django.shortcuts import render
-from django.http import JsonResponse
-import google.generativeai as genai
 
 # Configure the Gemini API
 genai.configure(api_key="AIzaSyCBHJzNyEhusj_bDljUkTvKYQU95hgcDag")
@@ -371,4 +417,15 @@ def rank_answers(question, answers):
     return [{'answer': answer, 'similarity': similarity[0][0]} for answer, similarity in ranked_answers]
 
 
-
+def csrf_failure(request, reason=""):
+    """
+    Custom CSRF failure handler. Re-directs users to login if their CSRF token expires.
+    (Often happens when a session gets invalidated by a login on another tab)
+    """
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.path.startswith('/api/'):
+        return JsonResponse({'error': 'csrf_failed', 'message': 'CSRF token missing or incorrect. Session likely expired.'}, status=403)
+    
+    messages.warning(request, "Your session expired or your form was open too long. Please sign in again.")
+    if hasattr(request, 'user') and request.user.is_authenticated:
+        return redirect('chat_room')
+    return redirect('login')

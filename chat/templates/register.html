@@ -3,92 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — JustChatting</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Register — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100dvh;
+            background: #020617;
+            color: #f8fafc;
             display: flex; align-items: center; justify-content: center;
-            padding: 20px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .glass-card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
+        /* ── Dynamic Mesh Background ── */
+        .ambient-bg {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 35%);
+            filter: blur(100px);
+            animation: meshFlow 25s ease-in-out infinite alternate;
+            z-index: 0; pointer-events: none;
+        }
+        @keyframes meshFlow {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(-5deg) scale(1.1); }
+            100% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        /* ── Glassmorphism Card ── */
+        .auth-card {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 24px;
-            padding: 48px 40px;
-            width: 100%; max-width: 460px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
-            animation: slideUp 0.5s ease;
+            padding: 48px;
+            width: 100%; max-width: 480px;
+            max-height: 95vh; overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; z-index: 10;
         }
-        @keyframes slideUp {
-            from { opacity:0; transform:translateY(30px); }
-            to   { opacity:1; transform:translateY(0); }
+        
+        /* Custom scrollbar */
+        .auth-card::-webkit-scrollbar { width: 6px; }
+        .auth-card::-webkit-scrollbar-track { background: transparent; }
+        .auth-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .auth-card::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+        
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .logo { display:flex; align-items:center; gap:12px; margin-bottom:36px; }
-        .logo-icon {
-            width:48px; height:48px;
-            background: linear-gradient(135deg, #6c63ff, #a855f7);
-            border-radius:14px; display:flex; align-items:center; justify-content:center;
-            font-size:22px;
+        .icon-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .icon {
+            width: 64px; height: 64px; border-radius: 18px;
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.5);
+            animation: pulseGlow 4s infinite alternate;
         }
-        .logo h1 { color:#fff; font-size:22px; font-weight:700; letter-spacing:-0.5px; }
-        .logo span { color:rgba(255,255,255,0.5); font-size:13px; display:block; }
-
-        h2 { color:#fff; font-size:26px; font-weight:700; margin-bottom:8px; }
-        .subtitle { color:rgba(255,255,255,0.5); font-size:14px; margin-bottom:28px; }
-
-        /* Django form fields */
-        p { margin-bottom: 16px; }
-        p label { color:rgba(255,255,255,0.7); font-size:13px; font-weight:500; display:block; margin-bottom:7px; }
-        p input, p select {
-            width:100%; padding:13px 16px;
-            background:rgba(255,255,255,0.07);
-            border:1px solid rgba(255,255,255,0.12);
-            border-radius:12px; color:#fff;
-            font-size:14px; font-family:'Inter',sans-serif;
-            outline:none; transition: border-color 0.2s, background 0.2s;
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4); }
+            100% { box-shadow: 0 15px 35px 2px rgba(139, 92, 246, 0.6); }
         }
-        p input::placeholder { color:rgba(255,255,255,0.3); }
-        p input:focus { border-color:#6c63ff; background:rgba(108,99,255,0.1); }
-        p .helptext { color:rgba(255,255,255,0.35); font-size:11px; margin-top:5px; display:block; }
-        p ul { list-style:none; }
-        p ul li { color:#fca5a5; font-size:12px; margin-top:5px; }
+
+        h2 { 
+            text-align: center; font-size: 26px; font-weight: 600; margin-bottom: 8px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 32px; font-weight: 300; }
+
+        /* Django form styling */
+        form p { margin-bottom: 20px; text-align: left; }
+        form p label { color: #cbd5e1; font-size: 14px; font-weight: 500; display: block; margin-bottom: 8px; }
+        form p input {
+            width: 100%; padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: #f8fafc;
+            font-size: 15px; font-family: 'Outfit', sans-serif;
+            transition: all 0.3s ease; outline: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        form p input::placeholder { color: #475569; }
+        form p input:focus { 
+            border-color: #ec4899; 
+            background: rgba(255, 255, 255, 0.06); 
+            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15), inset 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        form p .helptext { color: #64748b; font-size: 12px; margin-top: 8px; display: block; line-height: 1.5; font-weight: 300;}
+        form p ul.errorlist { list-style: none; margin-top: 8px; }
+        form p ul.errorlist li { color: #fca5a5; font-size: 13px; padding: 8px 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; margin-bottom: 4px; }
 
         .btn-primary {
-            width:100%; padding:14px;
-            background:linear-gradient(135deg,#6c63ff,#a855f7);
-            color:#fff; border:none; border-radius:12px;
-            font-size:15px; font-weight:600; font-family:'Inter',sans-serif;
-            cursor:pointer; margin-top:8px;
-            transition:opacity 0.2s, transform 0.15s; letter-spacing:0.2px;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: #ffffff;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.3s ease;
+            margin-top: 12px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px -6px rgba(236, 72, 153, 0.5);
         }
-        .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+        .btn-primary::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn-primary:hover::after { left: 150%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(236, 72, 153, 0.6); }
+        .btn-primary:active { transform: translateY(0); }
 
-        .footer-link { text-align:center; margin-top:24px; color:rgba(255,255,255,0.5); font-size:14px; }
-        .footer-link a { color:#a78bfa; text-decoration:none; font-weight:500; }
-        .footer-link a:hover { color:#c4b5fd; }
+        .footer-link {
+            display: block; text-align: center; margin-top: 32px;
+            color: #94a3b8; font-size: 14px; text-decoration: none; transition: color 0.3s;
+            font-weight: 400;
+        }
+        .footer-link:hover { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+        
+        @media (max-width: 480px) {
+            body { align-items: flex-start; overflow-y: auto; }
+            .auth-card {
+                padding: 40px 20px;
+                padding-top: calc(40px + env(safe-area-inset-top));
+                padding-bottom: calc(40px + env(safe-area-inset-bottom));
+                border-radius: 0; border: none; box-shadow: none;
+                max-width: 100%; min-height: 100vh; min-height: 100dvh;
+                background: rgba(15, 23, 42, 0.8);
+            }
+            form p input { font-size: 16px; }
+            h2 { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
-    <div class="glass-card">
-        <div class="logo">
-            <div class="logo-icon">💬</div>
-            <div>
-                <h1>JustChatting</h1>
-                <span>Real-time messaging</span>
+
+    <div class="ambient-bg"></div>
+
+    <div class="auth-card">
+        <div class="icon-container">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" height="32" width="32" fill="#ffffff"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
         </div>
 
-        <h2>Create account</h2>
-        <p class="subtitle">Join the conversation today</p>
+        <h2>Join the Network</h2>
+        <p class="subtitle">Experience frictionless communication today.</p>
 
         <form method="post">
             {% csrf_token %}
@@ -96,9 +166,8 @@
             <button type="submit" class="btn-primary">Create Account</button>
         </form>
 
-        <div class="footer-link">
-            Already have an account? <a href="{% url 'login' %}">Sign in</a>
-        </div>
+        <a href="{% url 'login' %}" class="footer-link">Already have an account? Sign in</a>
     </div>
+
 </body>
 </html>

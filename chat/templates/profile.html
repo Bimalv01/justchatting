@@ -4,111 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile — JustChatting</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100dvh;
+            background: #020617;
+            color: #f8fafc;
             display: flex; align-items: center; justify-content: center;
-            padding: 20px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
+        /* ── Dynamic Mesh Background ── */
+        .ambient-bg {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 70% 20%, rgba(34, 211, 238, 0.3) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 35%);
+            filter: blur(100px);
+            animation: meshFlow 25s ease-in-out infinite alternate;
+            z-index: 0; pointer-events: none;
+        }
+        @keyframes meshFlow {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+            100% { transform: rotate(-5deg) scale(1.05); }
+        }
+
+        /* ── Glassmorphism Card ── */
+        .auth-card {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 24px;
-            padding: 48px 40px;
+            padding: 48px;
             width: 100%; max-width: 460px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
-            animation: slideUp 0.5s ease;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; z-index: 10;
         }
-        @keyframes slideUp { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-        .back-link {
-            display: inline-flex; align-items: center; gap: 8px;
-            color: rgba(255,255,255,0.5); text-decoration: none;
-            font-size: 14px; margin-bottom: 28px;
-            transition: color 0.2s;
+        /* ── Avatar Profile ── */
+        .avatar-container {
+            position: relative;
+            width: 120px; height: 120px;
+            margin: 0 auto 24px auto;
+            border-radius: 50%;
+            padding: 4px; /* for gradient border */
+            background: linear-gradient(135deg, #8b5cf6, #22d3ee);
+            animation: spinBg 4s linear infinite;
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5);
         }
-        .back-link:hover { color: #a78bfa; }
-
-        .avatar-section {
-            display: flex; flex-direction: column; align-items: center; margin-bottom: 36px;
+        @keyframes spinBg {
+            100% { filter: hue-rotate(360deg); }
         }
-        .avatar-ring {
-            width: 90px; height: 90px; border-radius: 50%;
-            background: linear-gradient(135deg, #6c63ff, #a855f7);
-            padding: 3px; margin-bottom: 14px;
-        }
-        .avatar-inner {
-            width: 100%; height: 100%; border-radius: 50%;
-            background: #1a1640; overflow: hidden;
+        .avatar-img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #0f172a;
+            background-color: #1e293b;
             display: flex; align-items: center; justify-content: center;
-            font-size: 36px; color: #fff; font-weight: 600;
+            font-size: 40px; font-weight: 600; color: #f8fafc;
         }
-        .avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
-        .avatar-section h2 { color: #fff; font-size: 20px; font-weight: 700; }
-        .avatar-section span { color: rgba(255,255,255,0.4); font-size: 13px; }
 
-        h3 { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600;
-             letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 20px; }
+        h2 { 
+            text-align: center; font-size: 26px; font-weight: 600; margin-bottom: 8px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 32px; font-weight: 300; }
 
-        p { margin-bottom: 18px; }
-        p label { color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; display: block; margin-bottom: 7px; }
-        p input[type="file"], p input[type="text"], p input[type="email"], p select {
-            width: 100%; padding: 12px 16px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px; color: #fff;
-            font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+        /* Django Forms */
+        form { margin-top: 10px; }
+        form p { margin-bottom: 20px; text-align: left; }
+        form p label { color: #cbd5e1; font-size: 14px; font-weight: 500; display: block; margin-bottom: 8px; }
+        
+        /* File Input Styling */
+        input[type="file"] {
+            width: 100%; padding: 12px;
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px; color: #94a3b8;
+            font-size: 14px; font-family: 'Outfit', sans-serif;
+            transition: all 0.3s ease; cursor: pointer;
         }
-        p input:focus { border-color: #6c63ff; background: rgba(108,99,255,0.1); }
-        p input[type="file"] { cursor: pointer; }
-        p input[type="file"]::file-selector-button {
-            background: rgba(108,99,255,0.3); border: none;
-            color: #a78bfa; padding: 6px 12px; border-radius: 8px;
-            cursor: pointer; margin-right: 10px; font-family: 'Inter', sans-serif;
+        input[type="file"]:hover { border-color: #8b5cf6; background: rgba(255, 255, 255, 0.06); }
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            border: none; border-radius: 8px; color: white;
+            padding: 8px 16px; margin-right: 16px;
+            cursor: pointer; font-weight: 500; font-family: 'Outfit';
+            transition: 0.3s;
         }
+        input[type="file"]::file-selector-button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        form p .helptext { display: none; }
+        form p ul.errorlist { list-style: none; margin-top: 8px; }
+        form p ul.errorlist li { color: #fca5a5; font-size: 13px; padding: 8px 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; margin-bottom: 4px; }
 
         .btn-primary {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #6c63ff, #a855f7);
-            color: #fff; border: none; border-radius: 12px;
-            font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif;
-            cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #8b5cf6, #22d3ee);
+            color: #ffffff;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.3s ease;
+            margin-top: 12px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.5);
         }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn-primary:hover::after { left: 150%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(139, 92, 246, 0.6); }
+
+        .btn-secondary {
+            display: block; width: 100%; padding: 15px;
+            background: rgba(255, 255, 255, 0.03); color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            font-size: 15px; font-weight: 500; text-align: center; text-decoration: none;
+            transition: all 0.3s ease; margin-top: 16px; font-family: 'Outfit', sans-serif;
+            backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+        @media (max-width: 480px) {
+            body { align-items: flex-start; overflow-y: auto; }
+            .auth-card {
+                padding: 40px 20px;
+                padding-top: calc(40px + env(safe-area-inset-top));
+                padding-bottom: calc(40px + env(safe-area-inset-bottom));
+                border-radius: 0; border: none; box-shadow: none;
+                max-width: 100%; min-height: 100vh; min-height: 100dvh;
+                display: flex; flex-direction: column; justify-content: center;
+                background: rgba(15, 23, 42, 0.8);
+            }
+            .avatar-container { width: 96px; height: 96px; }
+            .avatar-img { font-size: 32px; }
+            h2 { font-size: 22px; }
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <a href="{% url 'chat_room' %}" class="back-link">← Back to chats</a>
 
-        <div class="avatar-section">
-            <div class="avatar-ring">
-                <div class="avatar-inner">
-                    {% if user.profile.profile_picture %}
-                        <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}">
-                    {% else %}
-                        {{ request.user.username|first|upper }}
-                    {% endif %}
-                </div>
-            </div>
-            <h2>{{ request.user.username }}</h2>
-            <span>Edit your profile</span>
+    <div class="ambient-bg"></div>
+
+    <div class="auth-card">
+        
+        <div class="avatar-container">
+            {% if user.profile.profile_picture and user.profile.profile_picture.name %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="avatar-img">
+            {% else %}
+                <div class="avatar-img">{{ user.username.0|upper }}</div>
+            {% endif %}
         </div>
 
-        <h3>Profile Settings</h3>
+        <h2>{{ user.username }}</h2>
+        <p class="subtitle">Customize your digital identity.</p>
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn-primary">Save Changes</button>
         </form>
+
+        <a href="{% url 'chat_room' %}" class="btn-secondary" style="margin-top: 24px;">Return to Chats</a>
     </div>
+
 </body>
 </html>

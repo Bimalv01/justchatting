@@ -51,8 +51,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
+    'chat.middleware.SingleSessionMiddleware',  # Single active session per user
 ]
+
 
 ROOT_URLCONF = 'chatapp.urls'
 
@@ -144,3 +145,15 @@ CHANNEL_LAYERS = {
     }
 }
 
+
+# Auth redirect settings
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/chat_room/'
+
+# Session settings
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days (in seconds)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
+# CSRF failure handling
+CSRF_FAILURE_VIEW = 'chat.views.csrf_failure'

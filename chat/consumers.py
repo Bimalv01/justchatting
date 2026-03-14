@@ -9,6 +9,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         self.me = self.scope['user']
+        if not self.me.is_authenticated:
+            await self.close()
+            return
+
         self.other_username = self.scope['url_route']['kwargs']['username']
 
         # Create a consistent room name regardless of who connects first
@@ -19,6 +23,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         # Join global presence group
         await self.channel_layer.group_add('global_presence', self.channel_name)
+        # Join personal notification group
+        await self.channel_layer.group_add(f"user_{self.me.username}", self.channel_name)
         
         await self.accept()
 
@@ -49,6 +55,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         await self.channel_layer.group_discard('global_presence', self.channel_name)
+        await self.channel_layer.group_discard(f"user_{self.me.username}", self.channel_name)
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -70,6 +77,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'sender': self.me.username,
                     'timestamp': message.timestamp.strftime('%H:%M'),
                     'profile_pic': profile_pic_url,
+                }
+            )
+            
+            # Also notify the recipient's personal group for sidebar/unread
+            await self.channel_layer.group_send(
+                f"user_{self.other_username}",
+                {
+                    'type': 'user_notification',
+                    'id': message.id,
+                    'sender': self.me.username,
+                    'message': content,
+                    'timestamp': message.timestamp.strftime('%H:%M'),
                 }
             )
             
@@ -102,16 +121,108 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         'id': message_id,
                     }
                 )
+                
+        elif action == 'read_receipt':
+            # Sender of this action is the recipient of the messages
+            unread_count = await self.mark_messages_read()
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'messages_read',
+                    'reader': self.me.username,
+                }
+            )
+            # Notify self to update sidebar if needed
+            await self.send(text_data=json.dumps({
+                'type': 'unread_count_update',
+                'username': self.other_username,
+                'count': unread_count
+            }))
 
     async def chat_message(self, event):
+        sender_name = event['sender']
+        message_id = event.get('id')
+        
+        # If I am the recipient, mark as delivered and notify sender
+        if sender_name != self.me.username:
+            await self.set_message_delivered(message_id)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'message_delivered',
+                    'id': message_id,
+                    'is_delivered': True,
+                    'sender': sender_name # who sent it
+                }
+            )
+            # Acknowledge receipt back to the room
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'message_delivered',
+                    'id': message_id,
+                    'is_delivered': True,
+                    'sender': sender_name
+                }
+            )
+
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
-            'id': event.get('id'),
+            'id': message_id,
             'message': event['message'],
-            'sender': event['sender'],
+            'sender': sender_name,
             'timestamp': event['timestamp'],
             'profile_pic': event.get('profile_pic', ''),
+            'is_read': False,
+            'is_delivered': sender_name != self.me.username # it's delivered if we are here
         }))
+
+    async def user_notification(self, event):
+        sender_name = event['sender']
+        message_id = event['id']
+        
+        # If I am the recipient, mark as delivered and notify sender
+        if sender_name != self.me.username:
+            await self.set_message_delivered(message_id)
+            
+            # Construction of the room name for that specific chat-room to notify original sender
+            names = sorted([self.me.username, sender_name])
+            specific_room = f"chat_{'_'.join(names)}"
+            
+            await self.channel_layer.group_send(
+                specific_room,
+                {
+                    'type': 'message_delivered',
+                    'id': message_id,
+                    'is_delivered': True,
+                    'sender': sender_name
+                }
+            )
+            
+            # Fetch unread count to update sidebar in real-time
+            unread_count = await self.get_unread_count(sender_name)
+            await self.send(text_data=json.dumps({
+                'type': 'unread_count_update',
+                'username': sender_name,
+                'count': unread_count,
+                'message': event['message'],
+                'timestamp': event['timestamp']
+            }))
+
+    async def message_delivered(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'message_status_update',
+            'id': event['id'],
+            'status': 'delivered'
+        }))
+
+    async def messages_read(self, event):
+        # Notify the original sender that their messages were read
+        if event['reader'] != self.me.username:
+            await self.send(text_data=json.dumps({
+                'type': 'message_status_update',
+                'status': 'read'
+            }))
 
     async def message_edited(self, event):
         await self.send(text_data=json.dumps({
@@ -166,7 +277,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             # Verify ownership before deleting
             msg = Message.objects.get(id=message_id, sender=self.me)
-            msg.delete()
+            msg.is_deleted = True
+            msg.save(update_fields=['is_deleted'])
             return True
         except Message.DoesNotExist:
             return False
@@ -180,6 +292,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 receiver=self.me,
                 read=False
             ).update(read=True)
+            return Message.objects.filter(sender=other_user, receiver=self.me, read=False).count()
+        return 0
+
+    @database_sync_to_async
+    def set_message_delivered(self, message_id):
+        try:
+            msg = Message.objects.get(id=message_id)
+            msg.is_delivered = True
+            msg.save(update_fields=['is_delivered'])
+        except Message.DoesNotExist:
+            pass
+
+    @database_sync_to_async
+    def get_unread_count(self, sender_username):
+        try:
+            sender = User.objects.get(username=sender_username)
+            return Message.objects.filter(sender=sender, receiver=self.me, read=False).count()
+        except User.DoesNotExist:
+            return 0
 
     @database_sync_to_async
     def get_profile_pic_url(self):

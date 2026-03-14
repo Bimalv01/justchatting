@@ -3,195 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — JustChatting</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Login — JustChatting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .glass-card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 24px;
-            padding: 48px 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 36px;
-        }
-        .logo-icon {
-            width: 48px; height: 48px;
-            background: linear-gradient(135deg, #6c63ff, #a855f7);
-            border-radius: 14px;
+            min-height: 100dvh;
+            background: #020617; /* Deep slate baseline */
+            color: #f8fafc;
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-        }
-        .logo h1 { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
-        .logo span { color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 400; display: block; }
-
-        h2 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-        .subtitle { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 32px; }
-
-        .form-group { margin-bottom: 18px; }
-        label { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500; display: block; margin-bottom: 8px; }
-        input {
-            width: 100%;
-            padding: 13px 16px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px;
-            color: #fff;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.2s, background 0.2s;
-            outline: none;
-        }
-        input::placeholder { color: rgba(255,255,255,0.3); }
-        input:focus {
-            border-color: #6c63ff;
-            background: rgba(108,99,255,0.1);
+            overflow: hidden;
+            position: relative;
         }
 
+        /* ── Dynamic Mesh Background ── */
+        .ambient-bg {
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.3) 0%, transparent 35%);
+            filter: blur(100px);
+            animation: meshFlow 25s ease-in-out infinite alternate;
+            z-index: 0; pointer-events: none;
+        }
+        @keyframes meshFlow {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+            100% { transform: rotate(-5deg) scale(1.05); }
+        }
+
+        /* ── Glassmorphism Card ── */
+        .auth-card {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            animation: floatUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative; z-index: 10;
+        }
+        @keyframes floatUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ── Header ── */
+        .icon-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .icon {
+            width: 72px; height: 72px; border-radius: 20px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5);
+            animation: pulseGlow 4s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4); }
+            100% { box-shadow: 0 15px 35px 2px rgba(59, 130, 246, 0.6); }
+        }
+
+        h2 { 
+            text-align: center; font-size: 28px; font-weight: 600; margin-bottom: 8px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 15px; margin-bottom: 32px; line-height: 1.5; font-weight: 300; }
+
+        /* ── Tabs ── */
+        .tabs { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 28px; position: relative; }
+        .tab-btn {
+            flex: 1; padding: 14px; text-align: center; color: #64748b;
+            font-size: 15px; font-weight: 500; cursor: pointer; border: none; background: none;
+            transition: color 0.3s; font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .tab-btn.active { color: #f8fafc; font-weight: 600; }
+        .tab-slider {
+            position: absolute; bottom: -1px; left: 0; width: 50%; height: 3px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+            border-radius: 3px;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        /* ── Forms ── */
+        .form-section { display: none; }
+        .form-section.active { display: block; animation: smoothReveal 0.5s ease forwards; }
+        @keyframes smoothReveal {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        form p { margin-bottom: 20px; text-align: left; }
+        form p label { color: #cbd5e1; font-size: 14px; font-weight: 500; display: block; margin-bottom: 8px; }
+        form p input {
+            width: 100%; padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; color: #f8fafc;
+            font-size: 15px; font-family: 'Outfit', sans-serif;
+            transition: all 0.3s ease; outline: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        form p input::placeholder { color: #475569; }
+        form p input:focus { 
+            border-color: #8b5cf6; 
+            background: rgba(255, 255, 255, 0.06); 
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        form p ul.errorlist { list-style: none; margin-top: 8px; }
+        form p ul.errorlist li { color: #fca5a5; font-size: 13px; padding: 8px 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; margin-bottom: 4px; }
+
+        /* ── Buttons ── */
         .btn-primary {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #6c63ff, #a855f7);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: opacity 0.2s, transform 0.15s;
-            letter-spacing: 0.2px;
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            color: #ffffff;
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.3s ease;
+            margin-top: 10px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 20px -6px rgba(139, 92, 246, 0.5);
         }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn-primary:hover::after { left: 150%; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(139, 92, 246, 0.6); }
         .btn-primary:active { transform: translateY(0); }
 
         .btn-secondary {
-            width: 100%;
-            padding: 13px;
-            background: rgba(255,255,255,0.07);
-            color: rgba(255,255,255,0.8);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            display: block; width: 100%; padding: 15px;
+            background: rgba(255, 255, 255, 0.03); color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            font-size: 15px; font-weight: 500; text-align: center; text-decoration: none;
+            transition: all 0.3s ease; margin-top: 16px; font-family: 'Outfit', sans-serif;
+            backdrop-filter: blur(10px);
         }
-        .btn-secondary:hover { background: rgba(255,255,255,0.13); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
 
-        .divider {
-            display: flex; align-items: center; gap: 12px;
-            color: rgba(255,255,255,0.3); font-size: 12px; margin: 20px 0;
-        }
-        .divider::before, .divider::after {
-            content: ''; flex: 1;
-            height: 1px; background: rgba(255,255,255,0.1);
-        }
+        /* ── Messages ── */
+        .messages { list-style: none; margin-bottom: 24px; padding: 0; }
+        .messages li { padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; text-align: center; backdrop-filter: blur(10px); }
+        .messages li.success { background: rgba(34, 197, 94, 0.15); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .messages li.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
 
+        /* ── Footer Link ── */
         .footer-link {
-            text-align: center; margin-top: 24px;
-            color: rgba(255,255,255,0.5); font-size: 14px;
+            display: block; text-align: center; margin-top: 32px;
+            color: #94a3b8; font-size: 14px; text-decoration: none; transition: color 0.3s;
+            font-weight: 400;
         }
-        .footer-link a { color: #a78bfa; text-decoration: none; font-weight: 500; }
-        .footer-link a:hover { color: #c4b5fd; }
+        .footer-link:hover { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
-        .error-box {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 10px;
-            padding: 12px 14px;
-            color: #fca5a5;
-            font-size: 13px;
-            margin-bottom: 20px;
+        @media (max-width: 480px) {
+            body { align-items: flex-start; overflow-y: auto; }
+            .auth-card {
+                padding: 40px 20px;
+                padding-top: calc(40px + env(safe-area-inset-top));
+                padding-bottom: calc(40px + env(safe-area-inset-bottom));
+                border-radius: 0; border: none; box-shadow: none;
+                max-width: 100%; min-height: 100vh; min-height: 100dvh;
+                display: flex; flex-direction: column; justify-content: center;
+                background: rgba(15, 23, 42, 0.8);
+            }
+            form p input { font-size: 16px; padding: 14px 14px; }
+            h2 { font-size: 24px; }
+            .tab-btn { font-size: 14px; padding: 12px; }
         }
-
-        .messages-list { list-style: none; margin-bottom: 16px; }
-        .messages-list li {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 10px;
-            padding: 10px 14px;
-            color: #fca5a5;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-        .messages-list li.success { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #86efac; }
     </style>
 </head>
 <body>
-    <div class="glass-card">
-        <div class="logo">
-            <div class="logo-icon">💬</div>
-            <div>
-                <h1>JustChatting</h1>
-                <span>Real-time messaging</span>
+
+    <div class="ambient-bg"></div>
+
+    <div class="auth-card">
+        <div class="icon-container">
+            <div class="icon">
+                <svg viewBox="0 0 24 24" height="36" width="36" fill="#ffffff"><path d="M12 2C6.48 2 2 6.48 2 12c0 2.19.71 4.22 1.9 5.86L2.6 22l4.24-1.28A9.954 9.954 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm-1.07 14.73c-.15.42-.64.6-1.05.35-1.55-.95-2.73-2.13-3.68-3.68-.25-.41-.07-.9.35-1.05l1.04-.37c.36-.13.75.03.95.36l.73 1.22c.16.27.12.62-.1.84a3.91 3.91 0 0 1 1.05 1.05c.22-.22.56-.26.83-.1l1.22.73c.33.2.49.59.36.95l-.37 1.04h-.01c-.13.37-.21.66-1.05.66.01-.01.01-.01.01 0z"/></svg>
             </div>
         </div>
-
-        <h2>Welcome back</h2>
-        <p class="subtitle">Sign in to continue chatting</p>
+        
+        <h2>Welcome to JustChatting</h2>
+        <p class="subtitle">Log in to enter the next generation of seamless encryption.</p>
 
         {% if messages %}
-        <ul class="messages-list">
-            {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
         {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-group">
-                <label for="id_username">Username</label>
-                <input type="text" id="id_username" name="username" placeholder="Enter your username" required autofocus>
-            </div>
-            <div class="form-group">
-                <label for="id_password">Password</label>
-                <input type="password" id="id_password" name="password" placeholder="Enter your password" required>
-            </div>
-            <button type="submit" class="btn-primary">Sign In</button>
-        </form>
-
-        <div class="divider">or</div>
-
-        <a href="{% url 'facial_login' %}" class="btn-secondary">
-            <span>👁️</span> Sign in with Face Unlock
-        </a>
-
-        <div class="footer-link">
-            Don't have an account? <a href="{% url 'register' %}">Create one</a>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('password')">Password</button>
+            <button class="tab-btn" onclick="switchTab('facial')">Face ID</button>
+            <div class="tab-slider" id="tabSlider"></div>
         </div>
+
+        <div id="passwordForm" class="form-section active">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-primary">Authenticate</button>
+            </form>
+        </div>
+
+        <div id="facialForm" class="form-section">
+            <p style="color: #94a3b8; font-size: 15px; text-align: center; margin-bottom: 24px; line-height: 1.6; font-weight: 300;">
+                Connect securely with biometric verification. The fastest way to sync your devices.
+            </p>
+            <a href="{% url 'facial_login' %}" class="btn-secondary">Authenticate via Camera</a>
+        </div>
+
+        <a href="{% url 'register' %}" class="footer-link">Don't have an account? Sign up</a>
     </div>
+
+    <script>
+        function switchTab(type) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            document.getElementById('passwordForm').classList.remove('active');
+            document.getElementById('facialForm').classList.remove('active');
+            
+            if (type === 'password') {
+                tabs[0].classList.add('active');
+                document.getElementById('tabSlider').style.transform = 'translateX(0)';
+                document.getElementById('passwordForm').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('tabSlider').style.transform = 'translateX(100%)';
+                document.getElementById('facialForm').classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>
