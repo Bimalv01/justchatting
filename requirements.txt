@@ -31,3 +31,8 @@ zope.interface==8.2
 gunicorn
 uvicorn[standard]
 whitenoise
+cmake
+face_recognition
+google-generativeai
+nltk
+scikit-learn
